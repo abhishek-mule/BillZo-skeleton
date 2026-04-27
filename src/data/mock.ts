@@ -1,12 +1,30 @@
 // Mock data store for BillZo (frontend-only skeleton)
+export type InvoiceItem = {
+  name: string;
+  hsn?: string;
+  qty: number;
+  price: number;
+  gst: number;
+};
+
 export type Invoice = {
   id: string;
   number: string;
   party: string;
+  partyPhone?: string;
   amount: number;
   status: "synced" | "pending" | "failed";
   date: string;
   method: "upi" | "cash" | "udhar";
+  items?: InvoiceItem[];
+};
+
+export const shopInfo = {
+  name: "Ravi Electronics",
+  address: "Shop 14, MG Road, Pune 411001",
+  phone: "+91 98765 43210",
+  gstin: "27ABCDE1234F1Z5",
+  upiId: "ravielectronics@okaxis",
 };
 
 export type Product = {
@@ -28,13 +46,28 @@ export type Party = {
 };
 
 export const mockInvoices: Invoice[] = [
-  { id: "1", number: "INV-0034", party: "Anjali Sharma",   amount: 4200,  status: "pending", date: "Today, 4:12 PM", method: "udhar" },
-  { id: "2", number: "INV-0033", party: "Rahul Mehta",     amount: 1850,  status: "synced",  date: "Today, 3:48 PM", method: "upi" },
-  { id: "3", number: "INV-0032", party: "Walk-in Customer", amount: 320,   status: "synced",  date: "Today, 3:30 PM", method: "cash" },
-  { id: "4", number: "INV-0031", party: "Priya Stores",    amount: 12400, status: "failed",  date: "Today, 2:15 PM", method: "upi" },
+  { id: "1", number: "INV-0034", party: "Anjali Sharma",   partyPhone: "919876543210", amount: 4200,  status: "pending", date: "Today, 4:12 PM", method: "udhar",
+    items: [
+      { name: "Surf Excel 1kg", hsn: "3402", qty: 4, price: 245, gst: 18 },
+      { name: "Aashirvaad Atta 5kg", hsn: "1101", qty: 8, price: 285, gst: 5 },
+      { name: "Colgate Toothpaste", hsn: "3306", qty: 10, price: 95, gst: 18 },
+    ]},
+  { id: "2", number: "INV-0033", party: "Rahul Mehta",     partyPhone: "919812345678", amount: 1850,  status: "synced",  date: "Today, 3:48 PM", method: "upi",
+    items: [
+      { name: "Coca Cola 750ml", hsn: "2202", qty: 12, price: 40, gst: 28 },
+      { name: "Haldiram Bhujia 200g", hsn: "2106", qty: 8, price: 70, gst: 12 },
+      { name: "Britannia Bread", hsn: "1905", qty: 5, price: 50, gst: 5 },
+    ]},
+  { id: "3", number: "INV-0032", party: "Walk-in Customer", amount: 320,   status: "synced",  date: "Today, 3:30 PM", method: "cash",
+    items: [
+      { name: "Amul Milk 500ml", hsn: "0401", qty: 4, price: 32, gst: 0 },
+      { name: "Maggi 70g", hsn: "1902", qty: 8, price: 14, gst: 12 },
+      { name: "Parle-G Biscuit 100g", hsn: "1905", qty: 8, price: 10, gst: 5 },
+    ]},
+  { id: "4", number: "INV-0031", party: "Priya Stores",    partyPhone: "919988776655", amount: 12400, status: "failed",  date: "Today, 2:15 PM", method: "upi" },
   { id: "5", number: "INV-0030", party: "Kumar General",   amount: 870,   status: "synced",  date: "Today, 1:02 PM", method: "cash" },
-  { id: "6", number: "INV-0029", party: "Sita Devi",       amount: 2100,  status: "synced",  date: "Today, 12:40 PM", method: "upi" },
-  { id: "7", number: "INV-0028", party: "Mohan Traders",   amount: 6710,  status: "failed",  date: "Today, 11:22 AM", method: "udhar" },
+  { id: "6", number: "INV-0029", party: "Sita Devi",       partyPhone: "919898912121", amount: 2100,  status: "synced",  date: "Today, 12:40 PM", method: "upi" },
+  { id: "7", number: "INV-0028", party: "Mohan Traders",   partyPhone: "919765432109", amount: 6710,  status: "failed",  date: "Today, 11:22 AM", method: "udhar" },
 ];
 
 export const mockProducts: Product[] = [
