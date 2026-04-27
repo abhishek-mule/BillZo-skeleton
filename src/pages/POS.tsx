@@ -14,9 +14,11 @@ const POS = () => {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<string>("Walk-in Customer");
+  const [customerPhone, setCustomerPhone] = useState<string | undefined>(undefined);
   const [showCustomer, setShowCustomer] = useState(false);
   const [showPay, setShowPay] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<Invoice | null>(null);
+  const { prefs, update } = usePrefs();
 
   const filtered = useMemo(
     () => mockProducts.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())),
@@ -43,16 +45,39 @@ const POS = () => {
     );
   };
 
-  const handlePay = (method: string) => {
+  const handlePay = (method: "upi" | "cash" | "udhar") => {
     setShowPay(false);
-    setSuccess(true);
     if (navigator.vibrate) navigator.vibrate(80);
-    toast.success(`Invoice sent on WhatsApp · ${method}`);
-    setTimeout(() => {
-      setSuccess(false);
-      setCart([]);
-      setCustomer("Walk-in Customer");
-    }, 2000);
+    const inv: Invoice = {
+      id: `live-${Date.now()}`,
+      number: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+      party: customer,
+      partyPhone: customerPhone,
+      amount: Math.round(total),
+      status: "synced",
+      date: "Just now",
+      method,
+      items: cart.map((c) => ({ name: c.name, hsn: c.hsn, qty: c.qty, price: c.price, gst: c.gst })),
+    };
+    setSuccess(inv);
+  };
+
+  // Auto-print on success if enabled
+  useEffect(() => {
+    if (!success || !prefs.autoPrint) return;
+    const t = setTimeout(() => {
+      document.body.setAttribute("data-print-format", prefs.printFormat);
+      window.print();
+      setTimeout(() => document.body.removeAttribute("data-print-format"), 500);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [success, prefs.autoPrint, prefs.printFormat]);
+
+  const closeSuccess = () => {
+    setSuccess(null);
+    setCart([]);
+    setCustomer("Walk-in Customer");
+    setCustomerPhone(undefined);
   };
 
   return (
