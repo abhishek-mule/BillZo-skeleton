@@ -172,14 +172,14 @@ const POS = () => {
                 <User className="h-3 w-3" /> {customer}
               </button>
             </div>
-            {[
-              { l: "UPI", desc: "QR / link to customer", color: "primary" },
-              { l: "Cash", desc: "Mark as paid", color: "success" },
-              { l: "Udhar (Credit)", desc: "Add to ledger", color: "warning" },
-            ].map((m) => (
+            {([
+              { l: "UPI", desc: "QR / link to customer", method: "upi" as const },
+              { l: "Cash", desc: "Mark as paid", method: "cash" as const },
+              { l: "Udhar (Credit)", desc: "Add to ledger", method: "udhar" as const },
+            ]).map((m) => (
               <button
                 key={m.l}
-                onClick={() => handlePay(m.l)}
+                onClick={() => handlePay(m.method)}
                 className="w-full rounded-xl border-2 border-input p-4 flex items-center justify-between hover:border-primary hover:bg-secondary/40 transition-base text-left"
               >
                 <div>
@@ -189,6 +189,17 @@ const POS = () => {
                 <span className="text-primary font-medium text-sm">→</span>
               </button>
             ))}
+
+            <label className="mt-2 flex items-center gap-2.5 rounded-xl border border-dashed border-input p-3 cursor-pointer hover:bg-secondary/40">
+              <input
+                type="checkbox"
+                checked={prefs.autoPrint}
+                onChange={(e) => update("autoPrint", e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              <Printer className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Auto-print receipt after billing</span>
+            </label>
           </div>
         </Sheet>
       )}
@@ -198,7 +209,7 @@ const POS = () => {
         <Sheet onClose={() => setShowCustomer(false)} title="Select customer">
           <div className="space-y-1">
             <button
-              onClick={() => { setCustomer("Walk-in Customer"); setShowCustomer(false); }}
+              onClick={() => { setCustomer("Walk-in Customer"); setCustomerPhone(undefined); setShowCustomer(false); }}
               className="w-full text-left rounded-lg p-3 hover:bg-secondary"
             >
               <div className="font-medium text-sm">Walk-in Customer</div>
@@ -207,7 +218,7 @@ const POS = () => {
             {mockParties.filter((p) => p.type === "customer").map((p) => (
               <button
                 key={p.id}
-                onClick={() => { setCustomer(p.name); setShowCustomer(false); }}
+                onClick={() => { setCustomer(p.name); setCustomerPhone(p.phone.replace(/\s/g, "")); setShowCustomer(false); }}
                 className="w-full text-left rounded-lg p-3 hover:bg-secondary flex justify-between items-center"
               >
                 <div>
@@ -225,15 +236,29 @@ const POS = () => {
 
       {/* Success overlay */}
       {success && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur animate-fade-in">
-          <div className="rounded-3xl bg-card border border-border shadow-elegant p-10 text-center max-w-sm mx-4 animate-scale-in">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-success text-success-foreground shadow-success">
-              <CheckCircle2 className="h-10 w-10" />
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center bg-background/80 backdrop-blur animate-fade-in" onClick={closeSuccess}>
+          <div
+            className="w-full lg:max-w-md bg-card lg:rounded-3xl rounded-t-3xl border border-border shadow-elegant p-6 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-success text-success-foreground shadow-success">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <h2 className="mt-3 text-xl font-bold">Invoice {success.number}</h2>
+              <div className="text-3xl font-bold number-display mt-1">{formatINR(success.amount)}</div>
+              <div className="mt-2"><AutoSaveIndicator synced /></div>
             </div>
-            <h2 className="mt-5 text-2xl font-bold">Invoice sent!</h2>
-            <p className="mt-1 text-sm text-muted-foreground inline-flex items-center gap-1.5 justify-center">
-              <MessageCircle className="h-4 w-4 text-success" /> Delivered on WhatsApp
-            </p>
+
+            <div className="mt-5">
+              <InvoiceActionsBar invoice={success} variant="compact" />
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button onClick={closeSuccess} className="flex-1 rounded-xl border border-input py-3 text-sm font-medium hover:bg-secondary transition-base">
+                New sale
+              </button>
+            </div>
           </div>
         </div>
       )}
