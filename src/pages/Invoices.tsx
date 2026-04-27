@@ -82,40 +82,43 @@ const Invoices = () => {
             ) : filtered.map((inv) => (
               <li
                 key={inv.id}
-                className={`md:grid md:grid-cols-[1fr_1fr_120px_120px_100px] md:gap-4 md:items-center px-5 py-4 hover:bg-muted/40 transition-base ${
-                  inv.status === "failed" ? "bg-destructive/5" : ""
-                }`}
+                className={`hover:bg-muted/40 transition-base ${inv.status === "failed" ? "bg-destructive/5" : ""}`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold">
-                    {inv.party.charAt(0)}
+                <Link
+                  to={`/invoices/${inv.id}`}
+                  className="md:grid md:grid-cols-[1fr_1fr_120px_120px_100px] md:gap-4 md:items-center px-5 py-4 block"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold">
+                      {inv.party.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm truncate">{inv.party}</div>
+                      <div className="text-xs text-muted-foreground md:hidden">{inv.number} • {inv.date}</div>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="font-semibold text-sm truncate">{inv.party}</div>
-                    <div className="text-xs text-muted-foreground md:hidden">{inv.number} • {inv.date}</div>
+                  <div className="hidden md:block text-sm">
+                    <div className="font-medium">{inv.number}</div>
+                    <div className="text-xs text-muted-foreground">{inv.date}</div>
                   </div>
-                </div>
-                <div className="hidden md:block text-sm">
-                  <div className="font-medium">{inv.number}</div>
-                  <div className="text-xs text-muted-foreground">{inv.date}</div>
-                </div>
-                <div className="hidden md:block text-sm capitalize text-muted-foreground">{inv.method}</div>
-                <div className="md:text-right mt-2 md:mt-0 flex md:block justify-between items-center">
-                  <span className="text-sm font-bold number-display">{formatINR(inv.amount)}</span>
-                  <span className={`md:hidden ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusStyle[inv.status]}`}>
-                    {inv.status}
-                  </span>
-                </div>
-                <div className="hidden md:flex justify-end items-center gap-2">
-                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${statusStyle[inv.status]}`}>
-                    {inv.status}
-                  </span>
-                  {inv.status === "failed" && (
-                    <button onClick={() => toast.success("Retrying…")} className="grid h-7 w-7 place-items-center rounded-md text-warning hover:bg-warning-soft">
-                      <RefreshCw className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
+                  <div className="hidden md:block text-sm capitalize text-muted-foreground">{inv.method}</div>
+                  <div className="md:text-right mt-2 md:mt-0 flex md:block justify-between items-center">
+                    <span className="text-sm font-bold number-display">{formatINR(inv.amount)}</span>
+                    <span className={`md:hidden ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusStyle[inv.status]}`}>
+                      {inv.status}
+                    </span>
+                  </div>
+                  <div className="hidden md:flex justify-end items-center gap-2">
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${statusStyle[inv.status]}`}>
+                      {inv.status}
+                    </span>
+                    {inv.status === "failed" && (
+                      <button onClick={(e) => { e.preventDefault(); toast.success("Retrying…"); }} className="grid h-7 w-7 place-items-center rounded-md text-warning hover:bg-warning-soft">
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>

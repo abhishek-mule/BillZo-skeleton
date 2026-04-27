@@ -9,6 +9,7 @@ import Onboarding from "./pages/Onboarding.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import POS from "./pages/POS.tsx";
 import Invoices from "./pages/Invoices.tsx";
+import InvoiceDetail from "./pages/InvoiceDetail.tsx";
 import Purchases from "./pages/Purchases.tsx";
 import Parties from "./pages/Parties.tsx";
 import Products from "./pages/Products.tsx";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pos" element={<POS />} />
           <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/purchases" element={<Purchases />} />
           <Route path="/parties" element={<Parties />} />
           <Route path="/products" element={<Products />} />
