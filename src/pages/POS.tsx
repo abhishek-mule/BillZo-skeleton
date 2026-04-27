@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { mockProducts, mockParties, formatINR, type Product } from "@/data/mock";
-import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User } from "lucide-react";
+import { mockProducts, mockParties, formatINR, type Product, type Invoice } from "@/data/mock";
+import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { InvoiceActionsBar } from "@/components/invoice/InvoiceActionsBar";
+import { AutoSaveIndicator } from "@/components/invoice/AutoSaveIndicator";
+import { usePrefs } from "@/hooks/usePrefs";
 
 type CartItem = Product & { qty: number };
 
