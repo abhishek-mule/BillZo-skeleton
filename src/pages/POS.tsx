@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Fuse from "fuse.js";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { formatINR, type Product, type Invoice } from "@/data/mock";
 import { useStore, storeApi } from "@/store/useStore";
-import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User, Printer } from "lucide-react";
+import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User, Printer, ScanLine, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { InvoiceActionsBar } from "@/components/invoice/InvoiceActionsBar";
 import { AutoSaveIndicator } from "@/components/invoice/AutoSaveIndicator";
@@ -19,14 +20,41 @@ const POS = () => {
   const [showCustomer, setShowCustomer] = useState(false);
   const [showPay, setShowPay] = useState(false);
   const [success, setSuccess] = useState<Invoice | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   const { prefs, update } = usePrefs();
   const products = useStore((s) => s.products);
   const parties = useStore((s) => s.parties);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const lastKeyTime = useRef<number>(0);
+  const keyBuffer = useRef<string>("");
 
-  const filtered = useMemo(
-    () => products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())),
-    [query, products],
+  // Build fuzzy index over name + barcode (rebuild only when products change)
+  const fuse = useMemo(
+    () =>
+      new Fuse(products, {
+        keys: [
+          { name: "name", weight: 0.7 },
+          { name: "barcode", weight: 0.3 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+      }),
+    [products],
   );
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) {
+      // Show recents first, then all
+      const recents = recentIds
+        .map((id) => products.find((p) => p.id === id))
+        .filter(Boolean) as Product[];
+      const rest = products.filter((p) => !recentIds.includes(p.id));
+      return [...recents, ...rest];
+    }
+    return fuse.search(query).map((r) => r.item);
+  }, [query, fuse, products, recentIds]);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const tax = cart.reduce((s, i) => s + (i.price * i.qty * i.gst) / 100, 0);
