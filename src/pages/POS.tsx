@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { InvoiceActionsBar } from "@/components/invoice/InvoiceActionsBar";
 import { AutoSaveIndicator } from "@/components/invoice/AutoSaveIndicator";
 import { usePrefs } from "@/hooks/usePrefs";
+import { pushInvoiceToIntegrations } from "@/integrations/publish";
 
 type CartItem = Product & { qty: number };
 
