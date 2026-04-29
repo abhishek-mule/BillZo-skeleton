@@ -103,6 +103,9 @@ const POS = () => {
     });
     toast.success(`Invoice ${inv.number} created`);
     setSuccess(inv);
+
+    // Push to Frappe (stub) if enabled — runs in background; updates badge.
+    void pushInvoiceToIntegrations(inv);
   };
 
   // Auto-print on success if enabled
