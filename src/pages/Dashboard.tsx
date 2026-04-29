@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { todayStats, mockInvoices, formatINR } from "@/data/mock";
-import { Plus, ScanLine, Package, Users, AlertTriangle, CheckCircle2, ArrowRight, TrendingUp } from "lucide-react";
+import { formatINR } from "@/data/mock";
+import { useStore, storeApi } from "@/store/useStore";
+import { Plus, ScanLine, Package, Users, AlertTriangle, CheckCircle2, ArrowRight, TrendingUp, Receipt } from "lucide-react";
+import { toast } from "sonner";
 
 const statusBadge: Record<string, string> = {
   synced:  "bg-success-soft text-success",
@@ -11,7 +13,12 @@ const statusBadge: Record<string, string> = {
 };
 
 const Dashboard = () => {
-  const allSynced = todayStats.failedCount === 0;
+  const invoices = useStore((s) => s.invoices);
+  const todayRevenue = invoices
+    .filter((i) => i.status !== "failed" && i.method !== "udhar")
+    .reduce((s, i) => s + i.amount, 0);
+  const failedCount = invoices.filter((i) => i.status === "failed").length;
+  const allSynced = failedCount === 0;
   return (
     <AppShell title="Home">
       <div className="px-4 lg:px-8 py-5 lg:py-8 max-w-7xl mx-auto space-y-5">
@@ -23,12 +30,12 @@ const Dashboard = () => {
           <div className="relative">
             <div className="text-sm opacity-80">Today's revenue</div>
             <div className="mt-2 text-5xl lg:text-6xl font-bold number-display tracking-tight">
-              {formatINR(todayStats.revenue)}
+              {formatINR(todayRevenue)}
             </div>
             <div className="mt-3 flex items-center gap-4 text-sm opacity-90">
-              <span>{todayStats.invoiceCount} invoices</span>
+              <span>{invoices.length} invoices</span>
               <span className="opacity-50">•</span>
-              <span className="inline-flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> +18% vs yesterday</span>
+              <span className="inline-flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> Live data</span>
             </div>
           </div>
         </div>
@@ -40,13 +47,13 @@ const Dashboard = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className={`font-semibold ${allSynced ? "text-success" : "text-warning"}`}>
-              {allSynced ? "All invoices synced" : `${todayStats.failedCount} invoices failed to sync`}
+              {allSynced ? "All invoices synced" : `${failedCount} invoices failed to sync`}
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               {allSynced ? "Last synced just now" : "Tap retry to send them again"}
             </div>
           </div>
-          {!allSynced && <Button variant="default" size="sm">Retry</Button>}
+          {!allSynced && <Button variant="default" size="sm" onClick={() => { storeApi.retryAllFailed(); toast.success("All synced"); }}>Retry</Button>}
         </div>
 
         {/* Quick actions */}
@@ -80,25 +87,38 @@ const Dashboard = () => {
               View all <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          <ul className="divide-y divide-border">
-            {mockInvoices.slice(0, 6).map((inv) => (
-              <li key={inv.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-base">
-                <div className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-sm font-semibold">
-                  {inv.party.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{inv.party}</div>
-                  <div className="text-xs text-muted-foreground">{inv.number} • {inv.date}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold number-display">{formatINR(inv.amount)}</div>
-                  <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusBadge[inv.status]}`}>
-                    {inv.status}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {invoices.length === 0 ? (
+            <div className="p-10 text-center">
+              <Receipt className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+              <div className="text-sm font-medium">No invoices yet</div>
+              <div className="text-xs text-muted-foreground mt-1">Bill your first sale from POS.</div>
+              <Link to="/pos" className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary text-primary-foreground px-4 py-2 text-sm font-semibold">
+                <Plus className="h-4 w-4" /> New sale
+              </Link>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {invoices.slice(0, 6).map((inv) => (
+                <li key={inv.id}>
+                  <Link to={`/invoices/${inv.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-base">
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-sm font-semibold">
+                      {inv.party.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate">{inv.party}</div>
+                      <div className="text-xs text-muted-foreground">{inv.number} • {inv.date}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold number-display">{formatINR(inv.amount)}</div>
+                      <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusBadge[inv.status]}`}>
+                        {inv.status}
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </AppShell>
