@@ -123,6 +123,71 @@ const POS = () => {
     setCustomerPhone(undefined);
   };
 
+  // Global keyboard handler: shortcuts + barcode scanner detection.
+  // Barcode scanners type a numeric string very fast (<30ms between keys) ending in Enter.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tgt = e.target as HTMLElement;
+      const inField = tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA");
+
+      // === Barcode scanner detection (works even while focus is in search) ===
+      const now = Date.now();
+      const fast = now - lastKeyTime.current < 30;
+      lastKeyTime.current = now;
+      if (e.key.length === 1 && /[0-9]/.test(e.key)) {
+        keyBuffer.current = fast ? keyBuffer.current + e.key : e.key;
+      } else if (e.key === "Enter" && keyBuffer.current.length >= 8) {
+        const code = keyBuffer.current;
+        keyBuffer.current = "";
+        e.preventDefault();
+        const hit = addByBarcode(code);
+        if (hit) {
+          setQuery("");
+          searchRef.current?.focus();
+        }
+        return;
+      } else if (e.key.length === 1) {
+        keyBuffer.current = "";
+      }
+
+      // === Shortcuts ===
+      // Modal-open guard
+      if (success || showPay || showCustomer || showShortcuts) {
+        if (e.key === "Escape") {
+          if (success) closeSuccess();
+          else if (showPay) setShowPay(false);
+          else if (showCustomer) setShowCustomer(false);
+          else if (showShortcuts) setShowShortcuts(false);
+        }
+        return;
+      }
+
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      } else if (e.key === "Enter" && inField && tgt === searchRef.current) {
+        // Add top result
+        if (filtered.length > 0 && query.trim()) {
+          e.preventDefault();
+          addToCart(filtered[0]);
+          setQuery("");
+        }
+      } else if (e.key === "F2") {
+        e.preventDefault();
+        if (cart.length > 0) setShowPay(true);
+      } else if (e.key === "Escape") {
+        if (query) setQuery("");
+        else if (cart.length > 0) setCart([]);
+      } else if ((e.key === "?" || (e.shiftKey && e.key === "/")) && !inField) {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtered, query, cart.length, success, showPay, showCustomer, showShortcuts, products]);
+
   return (
     <AppShell title="POS">
       <div className="px-4 lg:px-8 py-5 lg:py-8 max-w-7xl mx-auto">
