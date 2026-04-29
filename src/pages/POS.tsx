@@ -66,6 +66,20 @@ const POS = () => {
       if (ex) return c.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
       return [...c, { ...p, qty: 1 }];
     });
+    setRecentIds((r) => [p.id, ...r.filter((id) => id !== p.id)].slice(0, 6));
+  };
+
+  /** Try to add by exact barcode. Returns the matched product or null. */
+  const addByBarcode = (code: string): Product | null => {
+    const hit = products.find((p) => p.barcode === code);
+    if (hit) {
+      addToCart(hit);
+      if (navigator.vibrate) navigator.vibrate(30);
+      toast.success(`Added ${hit.name}`, { duration: 1200 });
+      return hit;
+    }
+    toast.error(`No product for barcode ${code}`, { duration: 1500 });
+    return null;
   };
 
   const updateQty = (id: string, delta: number) => {
