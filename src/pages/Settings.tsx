@@ -137,6 +137,42 @@ const Settings = () => {
           </div>
         ))}
 
+
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Data</div>
+          <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
+            <button
+              onClick={() => { storeApi.resetToMocks(); toast.success("Demo data restored"); }}
+              className="w-full p-4 flex items-center gap-3 hover:bg-muted/40 text-left"
+            >
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-primary">
+                <RotateCcw className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold">Reset demo data</div>
+                <div className="text-xs text-muted-foreground">Restore sample invoices, products, parties</div>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Delete all invoices, products and parties? This cannot be undone.")) {
+                  storeApi.clearAll();
+                  toast.success("All data cleared");
+                }
+              }}
+              className="w-full p-4 flex items-center gap-3 hover:bg-muted/40 text-left"
+            >
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-destructive/10 text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-destructive">Clear all data</div>
+                <div className="text-xs text-muted-foreground">Wipe local store completely</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <Link to="/" className="w-full rounded-2xl border border-destructive/30 bg-destructive/5 p-4 flex items-center justify-center gap-2 text-destructive font-medium hover:bg-destructive/10 transition-base">
           <LogOut className="h-4 w-4" /> Sign out
         </Link>
