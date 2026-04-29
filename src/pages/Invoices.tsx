@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { mockInvoices, formatINR } from "@/data/mock";
-import { Search, AlertTriangle, RefreshCw, Plus, Filter } from "lucide-react";
+import { formatINR } from "@/data/mock";
+import { useStore, storeApi } from "@/store/useStore";
+import { Search, AlertTriangle, RefreshCw, Plus, Filter, Receipt } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -18,14 +19,15 @@ const statusStyle: Record<string, string> = {
 const Invoices = () => {
   const [tab, setTab] = useState<Tab>("All");
   const [q, setQ] = useState("");
+  const invoices = useStore((s) => s.invoices);
 
-  const filtered = mockInvoices.filter((i) => {
+  const filtered = invoices.filter((i) => {
     const matchTab = tab === "All" || i.status === tab.toLowerCase();
     const matchQ = !q || i.party.toLowerCase().includes(q.toLowerCase()) || i.number.toLowerCase().includes(q.toLowerCase());
     return matchTab && matchQ;
   });
 
-  const failedCount = mockInvoices.filter((i) => i.status === "failed").length;
+  const failedCount = invoices.filter((i) => i.status === "failed").length;
 
   return (
     <AppShell title="Invoices">
@@ -37,7 +39,7 @@ const Invoices = () => {
               <span className="font-semibold text-warning">{failedCount} invoices failed to sync.</span>
               <span className="text-muted-foreground ml-1">Retry anytime — your data is safe.</span>
             </div>
-            <Button size="sm" onClick={() => toast.success("Retrying sync…")}>
+            <Button size="sm" onClick={() => { storeApi.retryAllFailed(); toast.success("All failed invoices synced"); }}>
               <RefreshCw className="h-3.5 w-3.5" /> Retry all
             </Button>
           </div>
@@ -78,7 +80,18 @@ const Invoices = () => {
           </div>
           <ul className="divide-y divide-border">
             {filtered.length === 0 ? (
-              <li className="p-12 text-center text-sm text-muted-foreground">No invoices match.</li>
+              <li className="p-12 text-center">
+                <Receipt className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+                <div className="text-sm font-medium">No invoices yet</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {invoices.length === 0 ? "Create your first invoice from POS." : "No invoices match this filter."}
+                </div>
+                {invoices.length === 0 && (
+                  <Link to="/pos" className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary text-primary-foreground px-4 py-2 text-sm font-semibold">
+                    <Plus className="h-4 w-4" /> Create first invoice
+                  </Link>
+                )}
+              </li>
             ) : filtered.map((inv) => (
               <li
                 key={inv.id}
@@ -113,7 +126,7 @@ const Invoices = () => {
                       {inv.status}
                     </span>
                     {inv.status === "failed" && (
-                      <button onClick={(e) => { e.preventDefault(); toast.success("Retrying…"); }} className="grid h-7 w-7 place-items-center rounded-md text-warning hover:bg-warning-soft">
+                      <button onClick={(e) => { e.preventDefault(); storeApi.retryInvoice(inv.id); toast.success("Synced"); }} className="grid h-7 w-7 place-items-center rounded-md text-warning hover:bg-warning-soft">
                         <RefreshCw className="h-3.5 w-3.5" />
                       </button>
                     )}
