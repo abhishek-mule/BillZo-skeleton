@@ -95,7 +95,7 @@ export const storeApi = {
       id: `inv-${Date.now()}`,
       number: `INV-${String(num).padStart(4, "0")}`,
       date: "Just now",
-      status: "synced",
+      status: "pending",
       ...input,
     };
 
