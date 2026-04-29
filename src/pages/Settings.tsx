@@ -137,6 +137,19 @@ const Settings = () => {
           </div>
         ))}
 
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Integrations</div>
+          <Link to="/integrations" className="block rounded-2xl border border-border bg-card p-4 flex items-center gap-3 hover:bg-muted/40 transition-base">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
+              <Send className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold">Frappe, WhatsApp, UPI, GST, SMS</div>
+              <div className="text-xs text-muted-foreground">Connect external services for sync, delivery & compliance</div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        </div>
 
         <div>
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Data</div>

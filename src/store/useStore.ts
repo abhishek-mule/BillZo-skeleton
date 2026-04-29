@@ -95,7 +95,7 @@ export const storeApi = {
       id: `inv-${Date.now()}`,
       number: `INV-${String(num).padStart(4, "0")}`,
       date: "Just now",
-      status: "synced",
+      status: "pending",
       ...input,
     };
 
@@ -118,12 +118,29 @@ export const storeApi = {
     return inv;
   },
 
+  setInvoiceStatus: (id: string, status: Invoice["status"]) =>
+    setState({
+      invoices: state.invoices.map((i) => (i.id === id ? { ...i, status } : i)),
+    }),
+
   retryInvoice: (id: string) =>
     setState({
       invoices: state.invoices.map((i) =>
         i.id === id ? { ...i, status: "synced" as const } : i,
       ),
     }),
+
+  upsertProducts: (incoming: Product[]) => {
+    const byId = new Map(state.products.map((p) => [p.id, p]));
+    incoming.forEach((p) => byId.set(p.id, { ...byId.get(p.id), ...p }));
+    setState({ products: Array.from(byId.values()) });
+  },
+
+  upsertParties: (incoming: Party[]) => {
+    const byId = new Map(state.parties.map((p) => [p.id, p]));
+    incoming.forEach((p) => byId.set(p.id, { ...byId.get(p.id), ...p }));
+    setState({ parties: Array.from(byId.values()) });
+  },
 
   retryAllFailed: () =>
     setState({
