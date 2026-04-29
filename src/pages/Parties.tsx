@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { mockParties, formatINR } from "@/data/mock";
-import { Search, MessageCircle, Phone, Plus } from "lucide-react";
+import { formatINR } from "@/data/mock";
+import { useStore, storeApi } from "@/store/useStore";
+import { Search, MessageCircle, Phone, Plus, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const Parties = () => {
   const [q, setQ] = useState("");
-  const totalPending = mockParties.reduce((s, p) => s + p.pending, 0);
-  const filtered = mockParties.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const parties = useStore((s) => s.parties);
+  const totalPending = parties.reduce((s, p) => s + p.pending, 0);
+  const filtered = parties.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
 
   return (
     <AppShell title="Parties">
@@ -17,7 +19,7 @@ const Parties = () => {
         <div className="rounded-2xl bg-gradient-card text-primary-foreground p-6 shadow-elegant">
           <div className="text-sm opacity-80">Total pending (Udhar)</div>
           <div className="mt-2 text-4xl font-bold number-display">{formatINR(totalPending)}</div>
-          <div className="mt-2 text-xs opacity-80">{mockParties.filter((p) => p.pending > 0).length} parties owe you money</div>
+          <div className="mt-2 text-xs opacity-80">{parties.filter((p) => p.pending > 0).length} parties owe you money</div>
         </div>
 
         <div className="flex gap-3">
@@ -61,16 +63,28 @@ const Parties = () => {
                 )}
               </div>
               {p.pending > 0 && (
-                <Button
-                  size="sm"
-                  variant="soft"
-                  onClick={() => toast.success(`Reminder sent to ${p.name} on WhatsApp`)}
-                >
-                  <MessageCircle className="h-3.5 w-3.5" /> Remind
-                </Button>
+                <div className="flex flex-col gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="soft"
+                    onClick={() => toast.success(`Reminder sent to ${p.name} on WhatsApp`)}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" /> Remind
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => { storeApi.markPartyPaid(p.id); toast.success(`${p.name} marked paid`); }}
+                  >
+                    <Check className="h-3.5 w-3.5" /> Paid
+                  </Button>
+                </div>
               )}
             </div>
           ))}
+          {filtered.length === 0 && (
+            <div className="p-12 text-center text-sm text-muted-foreground">No parties match.</div>
+          )}
         </div>
       </div>
     </AppShell>
