@@ -21,7 +21,7 @@ type State = {
   invoiceCounter: number;
 };
 
-const KEY = "billzo_store_v1";
+const KEY = "billzo_store_v2";
 
 const seed = (): State => ({
   invoices: [...mockInvoices],

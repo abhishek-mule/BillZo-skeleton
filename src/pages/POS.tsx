@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Fuse from "fuse.js";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { formatINR, type Product, type Invoice } from "@/data/mock";
 import { useStore, storeApi } from "@/store/useStore";
-import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User, Printer } from "lucide-react";
+import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User, Printer, ScanLine, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { InvoiceActionsBar } from "@/components/invoice/InvoiceActionsBar";
 import { AutoSaveIndicator } from "@/components/invoice/AutoSaveIndicator";
@@ -19,14 +20,41 @@ const POS = () => {
   const [showCustomer, setShowCustomer] = useState(false);
   const [showPay, setShowPay] = useState(false);
   const [success, setSuccess] = useState<Invoice | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   const { prefs, update } = usePrefs();
   const products = useStore((s) => s.products);
   const parties = useStore((s) => s.parties);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const lastKeyTime = useRef<number>(0);
+  const keyBuffer = useRef<string>("");
 
-  const filtered = useMemo(
-    () => products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())),
-    [query, products],
+  // Build fuzzy index over name + barcode (rebuild only when products change)
+  const fuse = useMemo(
+    () =>
+      new Fuse(products, {
+        keys: [
+          { name: "name", weight: 0.7 },
+          { name: "barcode", weight: 0.3 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+      }),
+    [products],
   );
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) {
+      // Show recents first, then all
+      const recents = recentIds
+        .map((id) => products.find((p) => p.id === id))
+        .filter(Boolean) as Product[];
+      const rest = products.filter((p) => !recentIds.includes(p.id));
+      return [...recents, ...rest];
+    }
+    return fuse.search(query).map((r) => r.item);
+  }, [query, fuse, products, recentIds]);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const tax = cart.reduce((s, i) => s + (i.price * i.qty * i.gst) / 100, 0);
@@ -38,6 +66,20 @@ const POS = () => {
       if (ex) return c.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
       return [...c, { ...p, qty: 1 }];
     });
+    setRecentIds((r) => [p.id, ...r.filter((id) => id !== p.id)].slice(0, 6));
+  };
+
+  /** Try to add by exact barcode. Returns the matched product or null. */
+  const addByBarcode = (code: string): Product | null => {
+    const hit = products.find((p) => p.barcode === code);
+    if (hit) {
+      addToCart(hit);
+      if (navigator.vibrate) navigator.vibrate(30);
+      toast.success(`Added ${hit.name}`, { duration: 1200 });
+      return hit;
+    }
+    toast.error(`No product for barcode ${code}`, { duration: 1500 });
+    return null;
   };
 
   const updateQty = (id: string, delta: number) => {
@@ -81,6 +123,71 @@ const POS = () => {
     setCustomerPhone(undefined);
   };
 
+  // Global keyboard handler: shortcuts + barcode scanner detection.
+  // Barcode scanners type a numeric string very fast (<30ms between keys) ending in Enter.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tgt = e.target as HTMLElement;
+      const inField = tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA");
+
+      // === Barcode scanner detection (works even while focus is in search) ===
+      const now = Date.now();
+      const fast = now - lastKeyTime.current < 30;
+      lastKeyTime.current = now;
+      if (e.key.length === 1 && /[0-9]/.test(e.key)) {
+        keyBuffer.current = fast ? keyBuffer.current + e.key : e.key;
+      } else if (e.key === "Enter" && keyBuffer.current.length >= 8) {
+        const code = keyBuffer.current;
+        keyBuffer.current = "";
+        e.preventDefault();
+        const hit = addByBarcode(code);
+        if (hit) {
+          setQuery("");
+          searchRef.current?.focus();
+        }
+        return;
+      } else if (e.key.length === 1) {
+        keyBuffer.current = "";
+      }
+
+      // === Shortcuts ===
+      // Modal-open guard
+      if (success || showPay || showCustomer || showShortcuts) {
+        if (e.key === "Escape") {
+          if (success) closeSuccess();
+          else if (showPay) setShowPay(false);
+          else if (showCustomer) setShowCustomer(false);
+          else if (showShortcuts) setShowShortcuts(false);
+        }
+        return;
+      }
+
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      } else if (e.key === "Enter" && inField && tgt === searchRef.current) {
+        // Add top result
+        if (filtered.length > 0 && query.trim()) {
+          e.preventDefault();
+          addToCart(filtered[0]);
+          setQuery("");
+        }
+      } else if (e.key === "F2") {
+        e.preventDefault();
+        if (cart.length > 0) setShowPay(true);
+      } else if (e.key === "Escape") {
+        if (query) setQuery("");
+        else if (cart.length > 0) setCart([]);
+      } else if ((e.key === "?" || (e.shiftKey && e.key === "/")) && !inField) {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtered, query, cart.length, success, showPay, showCustomer, showShortcuts, products]);
+
   return (
     <AppShell title="POS">
       <div className="px-4 lg:px-8 py-5 lg:py-8 max-w-7xl mx-auto">
@@ -90,13 +197,31 @@ const POS = () => {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
+                ref={searchRef}
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search products… (instant)"
-                className="w-full h-14 rounded-xl border-2 border-input bg-card pl-11 pr-4 text-base font-medium focus:border-primary focus:outline-none transition-base"
+                placeholder="Search or scan barcode…"
+                className="w-full h-14 rounded-xl border-2 border-input bg-card pl-11 pr-32 text-base font-medium focus:border-primary focus:outline-none transition-base"
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <ScanLine className="h-3.5 w-3.5" />
+                <span>scanner ready</span>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcuts(true)}
+                  className="ml-1 inline-flex items-center gap-1 rounded-md border border-input px-1.5 py-0.5 hover:bg-secondary"
+                  title="Keyboard shortcuts"
+                >
+                  <Keyboard className="h-3 w-3" /> <span>?</span>
+                </button>
+              </div>
             </div>
+            {!query && recentIds.length > 0 && (
+              <div className="mt-2 text-[11px] text-muted-foreground px-1">
+                Showing recents first · type to fuzzy-search · scan to add
+              </div>
+            )}
 
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
               {filtered.map((p) => {
@@ -263,6 +388,35 @@ const POS = () => {
           </div>
         </div>
       )}
+
+      {/* Keyboard shortcuts cheatsheet */}
+      {showShortcuts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur animate-fade-in" onClick={() => setShowShortcuts(false)}>
+          <div
+            className="w-full max-w-sm mx-4 bg-card rounded-2xl border border-border shadow-elegant p-6 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold inline-flex items-center gap-2">
+                <Keyboard className="h-4 w-4" /> Shortcuts
+              </h3>
+              <button onClick={() => setShowShortcuts(false)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-secondary">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <ul className="space-y-2.5 text-sm">
+              <Shortcut keys={["/"]} desc="Focus search" />
+              <Shortcut keys={["Enter"]} desc="Add top result" />
+              <Shortcut keys={["F2"]} desc="Open payment" />
+              <Shortcut keys={["Esc"]} desc="Clear search / cart" />
+              <Shortcut keys={["?"]} desc="Show this panel" />
+              <li className="pt-2 mt-2 border-t border-border text-xs text-muted-foreground">
+                Tip: USB / Bluetooth barcode scanners work automatically — just scan.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 };
@@ -356,6 +510,19 @@ const Sheet = ({ children, onClose, title }: { children: React.ReactNode; onClos
       {children}
     </div>
   </div>
+);
+
+const Shortcut = ({ keys, desc }: { keys: string[]; desc: string }) => (
+  <li className="flex items-center justify-between gap-3">
+    <span className="text-muted-foreground">{desc}</span>
+    <span className="flex gap-1">
+      {keys.map((k) => (
+        <kbd key={k} className="rounded-md border border-border bg-secondary px-2 py-0.5 text-xs font-mono font-semibold">
+          {k}
+        </kbd>
+      ))}
+    </span>
+  </li>
 );
 
 export default POS;

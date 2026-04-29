@@ -35,6 +35,7 @@ export type Product = {
   unit: string;
   hsn?: string;
   gst: number;
+  barcode?: string;
 };
 
 export type Party = {
@@ -71,18 +72,18 @@ export const mockInvoices: Invoice[] = [
 ];
 
 export const mockProducts: Product[] = [
-  { id: "p1", name: "Parle-G Biscuit 100g",  price: 10,   stock: 142, unit: "pc",  hsn: "1905", gst: 5 },
-  { id: "p2", name: "Amul Milk 500ml",        price: 32,   stock: 56,  unit: "pc",  hsn: "0401", gst: 0 },
-  { id: "p3", name: "Tata Salt 1kg",          price: 28,   stock: 78,  unit: "pc",  hsn: "2501", gst: 5 },
-  { id: "p4", name: "Surf Excel 1kg",         price: 245,  stock: 22,  unit: "pc",  hsn: "3402", gst: 18 },
-  { id: "p5", name: "Maggi 70g",              price: 14,   stock: 220, unit: "pc",  hsn: "1902", gst: 12 },
-  { id: "p6", name: "Coca Cola 750ml",        price: 40,   stock: 48,  unit: "pc",  hsn: "2202", gst: 28 },
-  { id: "p7", name: "Britannia Bread",        price: 50,   stock: 18,  unit: "pc",  hsn: "1905", gst: 5 },
-  { id: "p8", name: "Aashirvaad Atta 5kg",    price: 285,  stock: 12,  unit: "pc",  hsn: "1101", gst: 5 },
-  { id: "p9", name: "Colgate Toothpaste",     price: 95,   stock: 34,  unit: "pc",  hsn: "3306", gst: 18 },
-  { id: "p10", name: "Haldiram Bhujia 200g",  price: 70,   stock: 60,  unit: "pc",  hsn: "2106", gst: 12 },
-  { id: "p11", name: "Dettol Soap 75g",       price: 38,   stock: 88,  unit: "pc",  hsn: "3401", gst: 18 },
-  { id: "p12", name: "Tropicana Juice 1L",    price: 110,  stock: 26,  unit: "pc",  hsn: "2009", gst: 12 },
+  { id: "p1",  name: "Parle-G Biscuit 100g",  price: 10,   stock: 142, unit: "pc",  hsn: "1905", gst: 5,  barcode: "8901234500011" },
+  { id: "p2",  name: "Amul Milk 500ml",        price: 32,   stock: 56,  unit: "pc",  hsn: "0401", gst: 0,  barcode: "8901234500028" },
+  { id: "p3",  name: "Tata Salt 1kg",          price: 28,   stock: 78,  unit: "pc",  hsn: "2501", gst: 5,  barcode: "8901234500035" },
+  { id: "p4",  name: "Surf Excel 1kg",         price: 245,  stock: 22,  unit: "pc",  hsn: "3402", gst: 18, barcode: "8901234500042" },
+  { id: "p5",  name: "Maggi 70g",              price: 14,   stock: 220, unit: "pc",  hsn: "1902", gst: 12, barcode: "8901234500059" },
+  { id: "p6",  name: "Coca Cola 750ml",        price: 40,   stock: 48,  unit: "pc",  hsn: "2202", gst: 28, barcode: "8901234500066" },
+  { id: "p7",  name: "Britannia Bread",        price: 50,   stock: 18,  unit: "pc",  hsn: "1905", gst: 5,  barcode: "8901234500073" },
+  { id: "p8",  name: "Aashirvaad Atta 5kg",    price: 285,  stock: 12,  unit: "pc",  hsn: "1101", gst: 5,  barcode: "8901234500080" },
+  { id: "p9",  name: "Colgate Toothpaste",     price: 95,   stock: 34,  unit: "pc",  hsn: "3306", gst: 18, barcode: "8901234500097" },
+  { id: "p10", name: "Haldiram Bhujia 200g",   price: 70,   stock: 60,  unit: "pc",  hsn: "2106", gst: 12, barcode: "8901234500103" },
+  { id: "p11", name: "Dettol Soap 75g",        price: 38,   stock: 88,  unit: "pc",  hsn: "3401", gst: 18, barcode: "8901234500110" },
+  { id: "p12", name: "Tropicana Juice 1L",     price: 110,  stock: 26,  unit: "pc",  hsn: "2009", gst: 12, barcode: "8901234500127" },
 ];
 
 export const mockParties: Party[] = [
