@@ -197,13 +197,31 @@ const POS = () => {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
+                ref={searchRef}
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search products… (instant)"
-                className="w-full h-14 rounded-xl border-2 border-input bg-card pl-11 pr-4 text-base font-medium focus:border-primary focus:outline-none transition-base"
+                placeholder="Search or scan barcode…"
+                className="w-full h-14 rounded-xl border-2 border-input bg-card pl-11 pr-32 text-base font-medium focus:border-primary focus:outline-none transition-base"
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <ScanLine className="h-3.5 w-3.5" />
+                <span>scanner ready</span>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcuts(true)}
+                  className="ml-1 inline-flex items-center gap-1 rounded-md border border-input px-1.5 py-0.5 hover:bg-secondary"
+                  title="Keyboard shortcuts"
+                >
+                  <Keyboard className="h-3 w-3" /> <span>?</span>
+                </button>
+              </div>
             </div>
+            {!query && recentIds.length > 0 && (
+              <div className="mt-2 text-[11px] text-muted-foreground px-1">
+                Showing recents first · type to fuzzy-search · scan to add
+              </div>
+            )}
 
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
               {filtered.map((p) => {
