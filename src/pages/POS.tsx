@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { mockProducts, mockParties, formatINR, type Product, type Invoice } from "@/data/mock";
+import { formatINR, type Product, type Invoice } from "@/data/mock";
+import { useStore, storeApi } from "@/store/useStore";
 import { Search, Plus, Minus, Trash2, X, CheckCircle2, MessageCircle, User, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { InvoiceActionsBar } from "@/components/invoice/InvoiceActionsBar";
@@ -19,10 +20,12 @@ const POS = () => {
   const [showPay, setShowPay] = useState(false);
   const [success, setSuccess] = useState<Invoice | null>(null);
   const { prefs, update } = usePrefs();
+  const products = useStore((s) => s.products);
+  const parties = useStore((s) => s.parties);
 
   const filtered = useMemo(
-    () => mockProducts.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())),
-    [query],
+    () => products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())),
+    [query, products],
   );
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
@@ -46,19 +49,17 @@ const POS = () => {
   };
 
   const handlePay = (method: "upi" | "cash" | "udhar") => {
+    if (cart.length === 0) return;
     setShowPay(false);
     if (navigator.vibrate) navigator.vibrate(80);
-    const inv: Invoice = {
-      id: `live-${Date.now()}`,
-      number: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+    const inv = storeApi.createInvoice({
       party: customer,
       partyPhone: customerPhone,
       amount: Math.round(total),
-      status: "synced",
-      date: "Just now",
       method,
       items: cart.map((c) => ({ name: c.name, hsn: c.hsn, qty: c.qty, price: c.price, gst: c.gst })),
-    };
+    });
+    toast.success(`Invoice ${inv.number} created`);
     setSuccess(inv);
   };
 
@@ -215,7 +216,7 @@ const POS = () => {
               <div className="font-medium text-sm">Walk-in Customer</div>
               <div className="text-xs text-muted-foreground">No details</div>
             </button>
-            {mockParties.filter((p) => p.type === "customer").map((p) => (
+            {parties.filter((p) => p.type === "customer").map((p) => (
               <button
                 key={p.id}
                 onClick={() => { setCustomer(p.name); setCustomerPhone(p.phone.replace(/\s/g, "")); setShowCustomer(false); }}

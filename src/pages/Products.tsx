@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { mockProducts, formatINR } from "@/data/mock";
+import { formatINR } from "@/data/mock";
+import { useStore } from "@/store/useStore";
 import { Search, Plus, AlertTriangle } from "lucide-react";
 
 const Products = () => {
   const [q, setQ] = useState("");
-  const filtered = mockProducts.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
-  const lowStock = mockProducts.filter((p) => p.stock < 20).length;
+  const products = useStore((s) => s.products);
+  const filtered = products.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const lowStock = products.filter((p) => p.stock < 20).length;
 
   return (
     <AppShell title="Products">
       <div className="px-4 lg:px-8 py-5 lg:py-8 max-w-5xl mx-auto space-y-4">
         <div className="grid grid-cols-3 gap-3">
-          <Stat label="Total products" value={mockProducts.length.toString()} />
+          <Stat label="Total products" value={products.length.toString()} />
           <Stat label="Low stock" value={lowStock.toString()} warn={lowStock > 0} />
-          <Stat label="Stock value" value={formatINR(mockProducts.reduce((s, p) => s + p.price * p.stock, 0))} />
+          <Stat label="Stock value" value={formatINR(products.reduce((s, p) => s + p.price * p.stock, 0))} />
         </div>
 
         <div className="flex gap-3">
