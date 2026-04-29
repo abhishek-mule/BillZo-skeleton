@@ -388,6 +388,35 @@ const POS = () => {
           </div>
         </div>
       )}
+
+      {/* Keyboard shortcuts cheatsheet */}
+      {showShortcuts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur animate-fade-in" onClick={() => setShowShortcuts(false)}>
+          <div
+            className="w-full max-w-sm mx-4 bg-card rounded-2xl border border-border shadow-elegant p-6 animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold inline-flex items-center gap-2">
+                <Keyboard className="h-4 w-4" /> Shortcuts
+              </h3>
+              <button onClick={() => setShowShortcuts(false)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-secondary">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <ul className="space-y-2.5 text-sm">
+              <Shortcut keys={["/"]} desc="Focus search" />
+              <Shortcut keys={["Enter"]} desc="Add top result" />
+              <Shortcut keys={["F2"]} desc="Open payment" />
+              <Shortcut keys={["Esc"]} desc="Clear search / cart" />
+              <Shortcut keys={["?"]} desc="Show this panel" />
+              <li className="pt-2 mt-2 border-t border-border text-xs text-muted-foreground">
+                Tip: USB / Bluetooth barcode scanners work automatically — just scan.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 };
