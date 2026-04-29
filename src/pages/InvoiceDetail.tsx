@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AppShell } from "@/components/app/AppShell";
-import { mockInvoices, formatINR, shopInfo } from "@/data/mock";
+import { formatINR, shopInfo } from "@/data/mock";
+import { useStore } from "@/store/useStore";
 import { InvoiceActionsBar } from "@/components/invoice/InvoiceActionsBar";
 import { AutoSaveIndicator } from "@/components/invoice/AutoSaveIndicator";
 import { ArrowLeft, Phone, Calendar, Receipt } from "lucide-react";
@@ -14,7 +15,8 @@ const statusStyle: Record<string, string> = {
 
 const InvoiceDetail = () => {
   const { id } = useParams();
-  const invoice = useMemo(() => mockInvoices.find((i) => i.id === id), [id]);
+  const invoices = useStore((s) => s.invoices);
+  const invoice = useMemo(() => invoices.find((i) => i.id === id), [id, invoices]);
 
   if (!invoice) {
     return (
