@@ -1,7 +1,9 @@
 import { AppShell } from "@/components/app/AppShell";
-import { Store, Receipt, MessageCircle, Users, Shield, ChevronRight, LogOut, Printer, Send } from "lucide-react";
+import { Store, Receipt, MessageCircle, Users, Shield, ChevronRight, LogOut, Printer, Send, RotateCcw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePrefs, type DefaultDeliveryAction, type PrintFormat } from "@/hooks/usePrefs";
+import { storeApi } from "@/store/useStore";
+import { toast } from "sonner";
 
 const groups = [
   { title: "Business", items: [
