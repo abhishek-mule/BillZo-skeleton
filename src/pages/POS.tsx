@@ -512,4 +512,17 @@ const Sheet = ({ children, onClose, title }: { children: React.ReactNode; onClos
   </div>
 );
 
+const Shortcut = ({ keys, desc }: { keys: string[]; desc: string }) => (
+  <li className="flex items-center justify-between gap-3">
+    <span className="text-muted-foreground">{desc}</span>
+    <span className="flex gap-1">
+      {keys.map((k) => (
+        <kbd key={k} className="rounded-md border border-border bg-secondary px-2 py-0.5 text-xs font-mono font-semibold">
+          {k}
+        </kbd>
+      ))}
+    </span>
+  </li>
+);
+
 export default POS;
